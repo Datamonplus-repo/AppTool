@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="GeneXus">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../Docker/ServerApp/Tomcat10.0.10/webapps/TexplusNETJavaOracle/WEB-INF/lib/GeneXus.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../Docker/ServerApp/Tomcat10.0.10/lib/servlet-api.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

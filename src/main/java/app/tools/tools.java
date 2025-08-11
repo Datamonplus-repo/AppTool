@@ -1,5 +1,9 @@
 package app.tools;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -14,16 +18,36 @@ import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.imageio.ImageIO;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.printing.PDFPageable;
+
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.io.File;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.security.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import java.util.List;
+import java.util.regex.*;
 
 public class tools {
+
+      static {
+         if (Security.getProvider("BC") == null) {
+            Security.addProvider(new BouncyCastleProvider());
+         }
+      }
 
       public String qrcodeCM(int cm, String data, String Path) {
 
@@ -107,7 +131,23 @@ public class tools {
      return retorno;
    }
 
-      public String hashAt(String pathPrivatePem, String value)  {
+      public String hashAt(String pathPrivatePem, String value) {
+
+      String hashEnc = null;
+
+        try {
+
+           RsaSigner.loadPrivateKey(pathPrivatePem);
+           hashEnc = RsaSigner.signValue(value);
+
+        } catch (Exception e) {
+           hashEnc = e.getMessage();
+        }
+
+      return hashEnc;
+   }
+
+      public String hashAt_bck(String pathPrivatePem, String value)  {
 
       String hashEnc = null;
 
@@ -120,7 +160,10 @@ public class tools {
 
          if (pemObject instanceof PEMKeyPair) {
 
-            Security.addProvider(new BouncyCastleProvider());
+            if (Security.getProvider("BC") == null) {
+               Security.addProvider(new BouncyCastleProvider());
+            }
+
             PEMKeyPair pemKeyPair = (PEMKeyPair) pemObject;
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
             PrivateKey privateKey = converter.getPrivateKey(pemKeyPair.getPrivateKeyInfo());
@@ -145,14 +188,18 @@ public class tools {
             hashEnc = "O arquivo PEM não contém uma chave privada válida.";
          }
 
+         fileReader.close();
          pemParser.close();
+
       } catch (Exception e) {
          hashEnc = "Erro ao validar o arquivo PEM: " + e.getMessage();
       }
+
+
       return hashEnc;
    }
 
-      public String MergePdfFromJson(String jsonInputPath, String outputMergedPdf) {
+      public String merge(String jsonInputPath, String outputMergedPdf) {
 
          String Log = null;
 
@@ -166,6 +213,146 @@ public class tools {
          }
 
          return Log;
+      }
+
+      public String servletInfo() {
+
+            String basePath = System.getProperty("catalina.base");
+            return basePath + java.io.File.separator;
+      }
+
+      public String listprinter() {
+
+         // Imprimir como JSON formatado
+         String jsonOutput = null;
+         try {
+         PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
+
+         ObjectMapper mapper = new ObjectMapper();
+         ArrayNode printerArray = mapper.createArrayNode();
+
+         for (PrintService service : services) {
+            ObjectNode printerJson = mapper.createObjectNode();
+            printerJson.put("name", service.getName());
+            printerJson.put("path", service.getName()); // No Java, não há um path real
+            printerJson.put("status", "AVAILABLE");     // Status fixo por limitação da API Java
+            printerArray.add(printerJson);
+         }
+          jsonOutput = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(printerArray);
+
+          } catch (JsonProcessingException e) {
+              throw new RuntimeException(e);
+          }
+
+          System.out.println(jsonOutput);
+
+         return jsonOutput;
+      }
+
+      public String printto(String pdfPath, String printerName) {
+
+         System.out.println(pdfPath);
+         System.out.println(printerName);
+
+
+
+         String xlog = "";
+
+         try {
+         File pdfFile = new File(pdfPath);
+
+         try (PDDocument document = PDDocument.load(pdfFile)) {
+
+            PrinterJob job = PrinterJob.getPrinterJob();
+            PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
+
+            for (PrintService ps : printServices) {
+
+               if (ps.getName().equalsIgnoreCase(printerName)) {
+                       job.setPrintService(ps);
+                   break;
+               }
+            }
+
+            job.setJobName("Datamon Printer - WEB ");
+            job.setPageable(new PDFPageable(document));
+            job.print();
+            xlog = "SUCCESS";
+         }
+         } catch (PrinterException | IOException e) {
+            xlog = e.getMessage();
+         }
+
+         return xlog;
+      }
+
+      public String BuscarDatas(String texto) {
+      StringBuilder resultado = new StringBuilder();
+
+      String regex =
+              "\\b\\d{2}[\\/\\.\\-]\\d{2}[\\/\\.\\-]\\d{4}\\b" +                        // 18/12/2024, 08.09.2021
+                      "|\\b\\d{1,2} de [a-zç]+ de \\d{4}\\b" +                                  // 18 de outubro de 2024
+                      "|\\b\\d{1,2} de [A-ZÇ][a-zç]+ de \\d{4}\\b" +                            // 05 de Outubro de 2022
+                      "|\\b\\d{2}\\.\\d{2}\\.\\d{4}\\b";                                        // 08.09.2021
+
+      Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+      Matcher matcher = pattern.matcher(texto);
+
+      List<String> datasEncontradas = new ArrayList<>();
+      while (matcher.find()) {
+         datasEncontradas.add(matcher.group());
+      }
+
+      for (String dataOriginal : datasEncontradas) {
+         Date dataConvertida = null;
+
+         String[] formatosEntrada = {
+                 "dd/MM/yyyy", "dd.MM.yyyy", "dd-MM-yyyy",
+                 "d 'de' MMMM 'de' yyyy", "dd 'de' MMMM 'de' yyyy",
+                 "d 'de' MMMMM 'de' yyyy", "dd.MM.yyyy"
+         };
+
+         for (String formato : formatosEntrada) {
+            try {
+               DateFormat entrada = new SimpleDateFormat(formato, new Locale("pt", "BR"));
+               entrada.setLenient(false);
+               dataConvertida = entrada.parse(dataOriginal);
+               break;
+            } catch (ParseException e) {
+               // Tenta o próximo formato
+            }
+         }
+
+         if (dataConvertida != null) {
+            DateFormat saida = new SimpleDateFormat("dd/MM/yyyy");
+            resultado.append("").append(saida.format(dataConvertida)).append(",");
+         }
+      }
+
+      return resultado.toString().trim();
+   }
+
+      public String ExtratoBradesco(String path) {
+
+         return null;
+      }
+
+      public String email(String json) {
+
+         String log = null;
+
+         try {
+            ObjectMapper mapper = new ObjectMapper();
+            EmailRequest request = mapper.readValue(json, EmailRequest.class);
+            EmailSender.sendEmail(request);
+
+            log = "success : ok ";
+
+         } catch (Exception e) {
+            log = "error : " + e.getMessage();
+         }
+
+         return log;
       }
 
 }
