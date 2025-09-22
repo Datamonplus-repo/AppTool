@@ -17,7 +17,7 @@ import java.io.IOException;
 public class PDFMergerFromJson {
 
     private static final PDRectangle TARGET_SIZE = PDRectangle.A4;
-    private static final float MARGIN = 36f;
+    private static final float MARGIN = 10f;
 
     public static void merge(String jsonContent, String outputPdfPath) throws IOException {
         ObjectMapper mapper = new ObjectMapper();

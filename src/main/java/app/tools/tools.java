@@ -11,6 +11,8 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
+import org.apache.pdfbox.printing.PDFPrintable;
+import org.apache.pdfbox.printing.Scaling;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
@@ -19,12 +21,14 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.imageio.ImageIO;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.printing.PDFPageable;
 
-import javax.print.PrintService;
-import javax.print.PrintServiceLookup;
-import java.awt.print.PrinterException;
-import java.awt.print.PrinterJob;
+import javax.print.*;
+import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.PrintRequestAttributeSet;
+import javax.print.attribute.standard.*;
+import javax.print.event.PrintJobAdapter;
+import javax.print.event.PrintJobEvent;
+
 import java.io.File;
 
 import java.awt.*;
@@ -40,6 +44,8 @@ import java.util.*;
 
 import java.util.List;
 import java.util.regex.*;
+
+import static app.tools.Base64FileSaver.saveBase64File;
 
 public class tools {
 
@@ -223,7 +229,6 @@ public class tools {
 
       public String listprinter() {
 
-         // Imprimir como JSON formatado
          String jsonOutput = null;
          try {
          PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
@@ -249,41 +254,84 @@ public class tools {
          return jsonOutput;
       }
 
-      public String printto(String pdfPath, String printerName) {
+      public String printto(String pdfPath, String printerName, int copies, boolean color, boolean landscape) {
+        String xlog;
 
-         System.out.println(pdfPath);
-         System.out.println(printerName);
+        try {
 
+            File pdfFile = new File(pdfPath);
 
-
-         String xlog = "";
-
-         try {
-         File pdfFile = new File(pdfPath);
-
-         try (PDDocument document = PDDocument.load(pdfFile)) {
-
-            PrinterJob job = PrinterJob.getPrinterJob();
-            PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
-
-            for (PrintService ps : printServices) {
-
-               if (ps.getName().equalsIgnoreCase(printerName)) {
-                       job.setPrintService(ps);
-                   break;
-               }
+            if (!pdfFile.exists() || !pdfFile.isFile()) {
+                return "Arquivo PDF não encontrado: " + pdfPath;
             }
 
-            job.setJobName("Datamon Printer - WEB ");
-            job.setPageable(new PDFPageable(document));
-            job.print();
-            xlog = "SUCCESS";
-         }
-         } catch (PrinterException | IOException e) {
-            xlog = e.getMessage();
-         }
+            PrintService target = null;
+            PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
 
-         return xlog;
+            for (PrintService ps : services) {
+                if (ps.getName().equalsIgnoreCase(printerName)) {
+                    target = ps;
+                    break;
+                }
+            }
+
+            if (target == null) {
+                return "Impressora não encontrada: " + printerName;
+            }
+
+            try (PDDocument document = PDDocument.load(pdfFile)) {
+
+                PDFPrintable printable = new PDFPrintable(
+                        document,
+                        Scaling.SHRINK_TO_FIT,  // ajusta à página sem cortar
+                        true,                   // showPageBorder
+                        0                       // dpi (0 = padrão do driver)
+                );
+
+
+                PrintRequestAttributeSet attrs = new HashPrintRequestAttributeSet();
+
+                if (copies < 1) copies = 1;
+                attrs.add(new Copies(copies));
+
+                if (target.isAttributeCategorySupported(Chromaticity.class)) {
+                    attrs.add(color ? Chromaticity.COLOR : Chromaticity.MONOCHROME);
+                }
+
+                if (target.isAttributeCategorySupported(OrientationRequested.class)) {
+                    attrs.add(landscape ? OrientationRequested.LANDSCAPE : OrientationRequested.PORTRAIT);
+                }
+
+                // (opcional) Qualidade e duplex – descomente se quiser
+                // if (target.isAttributeCategorySupported(PrintQuality.class)) {
+                //     attrs.add(PrintQuality.HIGH);
+                // }
+                // if (target.isAttributeCategorySupported(Sides.class)) {
+                //     attrs.add(Sides.ONE_SIDED); // ou Sides.DUPLEX
+                // }
+
+                DocFlavor flavor = DocFlavor.SERVICE_FORMATTED.PRINTABLE;
+                Doc doc = new SimpleDoc(printable, flavor, null);
+                DocPrintJob job = target.createPrintJob();
+
+                job.addPrintJobListener(new PrintJobAdapter() {
+                    @Override public void printJobCompleted(PrintJobEvent pje) {
+                        System.out.println("Job concluído: " + pdfPath);
+                    }
+                    @Override public void printJobFailed(PrintJobEvent pje) {
+                        System.err.println("Job falhou: " + pdfPath);
+                    }
+                });
+
+                job.print(doc, attrs);
+                xlog = "SUCCESS";
+            }
+
+        } catch (PrintException | IOException e) {
+            xlog = e.getClass().getSimpleName() + ": " + e.getMessage();
+        }
+
+        return xlog;
       }
 
       public String BuscarDatas(String texto) {
@@ -341,6 +389,8 @@ public class tools {
 
          String log = null;
 
+         System.out.println(json);
+
          try {
             ObjectMapper mapper = new ObjectMapper();
             EmailRequest request = mapper.readValue(json, EmailRequest.class);
@@ -353,6 +403,22 @@ public class tools {
          }
 
          return log;
+      }
+
+      public String Base64ToFile(String base64, String destino) {
+
+          String log = null;
+
+          try {
+              Base64FileSaver.saveBase64File(destino, base64);
+              log = "sucesso";
+
+          } catch (IOException e) {
+
+              log = e.getMessage();
+          }
+
+        return log;
       }
 
 }
