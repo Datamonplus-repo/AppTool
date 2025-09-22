@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="app.tools.AppTest" time="0.066" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="app.tools.AppTest" time="0.054" tests="1" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="17"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -16,7 +16,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Amazon Corretto\jdk17.0.16_8\bin"/>
-    <property name="sun.java.command" value="C:\Users\jrkai\AppData\Local\Temp\surefire8195635575742298093\surefirebooter-20250922165008792_3.jar C:\Users\jrkai\AppData\Local\Temp\surefire8195635575742298093 2025-09-22T16-50-08_682-jvmRun1 surefire-20250922165008792_1tmp surefire_0-20250922165008792_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\jrkai\AppData\Local\Temp\surefire6752045044366985391\surefirebooter-20250922195129512_3.jar C:\Users\jrkai\AppData\Local\Temp\surefire6752045044366985391 2025-09-22T19-51-29_361-jvmRun1 surefire-20250922195129512_1tmp surefire_0-20250922195129512_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="D:\Projects\Java\AppTool\target\test-classes;D:\Projects\Java\AppTool\target\classes;C:\Users\jrkai\.m2\repository\com\google\zxing\core\3.4.1\core-3.4.1.jar;C:\Users\jrkai\.m2\repository\com\google\zxing\javase\3.4.1\javase-3.4.1.jar;C:\Users\jrkai\.m2\repository\com\beust\jcommander\1.78\jcommander-1.78.jar;C:\Users\jrkai\.m2\repository\com\github\jai-imageio\jai-imageio-core\1.4.0\jai-imageio-core-1.4.0.jar;C:\Users\jrkai\.m2\repository\org\bouncycastle\bcpkix-jdk18on\1.75\bcpkix-jdk18on-1.75.jar;C:\Users\jrkai\.m2\repository\org\bouncycastle\bcprov-jdk18on\1.75\bcprov-jdk18on-1.75.jar;C:\Users\jrkai\.m2\repository\org\bouncycastle\bcutil-jdk18on\1.75\bcutil-jdk18on-1.75.jar;C:\Users\jrkai\.m2\repository\junit\junit\4.13.2\junit-4.13.2.jar;C:\Users\jrkai\.m2\repository\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;C:\Users\jrkai\.m2\repository\org\junit\jupiter\junit-jupiter\6.0.0-RC3\junit-jupiter-6.0.0-RC3.jar;C:\Users\jrkai\.m2\repository\org\junit\jupiter\junit-jupiter-api\6.0.0-RC3\junit-jupiter-api-6.0.0-RC3.jar;C:\Users\jrkai\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\jrkai\.m2\repository\org\junit\platform\junit-platform-commons\6.0.0-RC3\junit-platform-commons-6.0.0-RC3.jar;C:\Users\jrkai\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\jrkai\.m2\repository\org\jspecify\jspecify\1.0.0\jspecify-1.0.0.jar;C:\Users\jrkai\.m2\repository\org\junit\jupiter\junit-jupiter-params\6.0.0-RC3\junit-jupiter-params-6.0.0-RC3.jar;C:\Users\jrkai\.m2\repository\org\junit\jupiter\junit-jupiter-engine\6.0.0-RC3\junit-jupiter-engine-6.0.0-RC3.jar;C:\Users\jrkai\.m2\repository\org\junit\platform\junit-platform-engine\6.0.0-RC3\junit-platform-engine-6.0.0-RC3.jar;C:\Users\jrkai\.m2\repository\com\squareup\moshi\moshi\1.15.0\moshi-1.15.0.jar;C:\Users\jrkai\.m2\repository\com\squareup\okio\okio\2.10.0\okio-2.10.0.jar;C:\Users\jrkai\.m2\repository\org\jetbrains\kotlin\kotlin-stdlib\1.4.20\kotlin-stdlib-1.4.20.jar;C:\Users\jrkai\.m2\repository\org\jetbrains\annotations\13.0\annotations-13.0.jar;C:\Users\jrkai\.m2\repository\org\jetbrains\kotlin\kotlin-stdlib-common\1.4.20\kotlin-stdlib-common-1.4.20.jar;C:\Users\jrkai\.m2\repository\org\jetbrains\kotlin\kotlin-stdlib-jdk8\1.8.21\kotlin-stdlib-jdk8-1.8.21.jar;C:\Users\jrkai\.m2\repository\org\jetbrains\kotlin\kotlin-stdlib-jdk7\1.8.21\kotlin-stdlib-jdk7-1.8.21.jar;C:\Users\jrkai\.m2\repository\org\apache\pdfbox\pdfbox\2.0.32\pdfbox-2.0.32.jar;C:\Users\jrkai\.m2\repository\org\apache\pdfbox\fontbox\2.0.32\fontbox-2.0.32.jar;C:\Users\jrkai\.m2\repository\commons-logging\commons-logging\1.2\commons-logging-1.2.jar;C:\Users\jrkai\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.17.0\jackson-databind-2.17.0.jar;C:\Users\jrkai\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.17.0\jackson-annotations-2.17.0.jar;C:\Users\jrkai\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.17.0\jackson-core-2.17.0.jar;C:\Users\jrkai\.m2\repository\net\bytebuddy\byte-buddy\1.14.9\byte-buddy-1.14.9.jar;C:\Users\jrkai\.m2\repository\com\sun\mail\jakarta.mail\2.0.1\jakarta.mail-2.0.1.jar;C:\Users\jrkai\.m2\repository\com\sun\activation\jakarta.activation\2.0.1\jakarta.activation-2.0.1.jar;"/>
     <property name="sun.cpu.endian" value="little"/>
@@ -31,7 +31,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\jrkai\AppData\Local\Temp\surefire8195635575742298093\surefirebooter-20250922165008792_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\jrkai\AppData\Local\Temp\surefire6752045044366985391\surefirebooter-20250922195129512_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="17.0.16+8-LTS"/>
@@ -60,5 +60,5 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="61.0"/>
   </properties>
-  <testcase name="shouldAnswerWithTrue" classname="app.tools.AppTest" time="0.048"/>
+  <testcase name="shouldAnswerWithTrue" classname="app.tools.AppTest" time="0.043"/>
 </testsuite>

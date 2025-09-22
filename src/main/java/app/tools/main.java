@@ -63,7 +63,7 @@ public class main {
         System.out.println(ret);
         */
 
-
+        /*
             String json = "{\n" +
                     "    \"Title\": \"Teste\",\n" +
                     "    \"Subject\": \"teste\",\n" +
@@ -105,6 +105,11 @@ public class main {
 
             log = tools.Base64ToFile(Base64,"c:\\temp\\PackingList_320_299045_20250717.xlsx");
             System.out.println(log);
+
+         */
+
+        log = tools.printto("D://TEMP//Report_Printer.pdf","Adobe PDF",1,false,false);
+        System.out.println(log);
 
 
     }

@@ -23,11 +23,14 @@ import javax.imageio.ImageIO;
 import org.apache.pdfbox.pdmodel.PDDocument;
 
 import javax.print.*;
+import javax.print.attribute.Attribute;
+import javax.print.attribute.AttributeSet;
 import javax.print.attribute.HashPrintRequestAttributeSet;
 import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.*;
 import javax.print.event.PrintJobAdapter;
 import javax.print.event.PrintJobEvent;
+
 
 import java.io.File;
 
@@ -258,23 +261,18 @@ public class tools {
         String xlog;
 
         try {
-
             File pdfFile = new File(pdfPath);
-
             if (!pdfFile.exists() || !pdfFile.isFile()) {
                 return "Arquivo PDF não encontrado: " + pdfPath;
             }
 
             PrintService target = null;
-            PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
-
-            for (PrintService ps : services) {
+            for (PrintService ps : PrintServiceLookup.lookupPrintServices(null, null)) {
                 if (ps.getName().equalsIgnoreCase(printerName)) {
                     target = ps;
                     break;
                 }
             }
-
             if (target == null) {
                 return "Impressora não encontrada: " + printerName;
             }
@@ -283,47 +281,66 @@ public class tools {
 
                 PDFPrintable printable = new PDFPrintable(
                         document,
-                        Scaling.SHRINK_TO_FIT,  // ajusta à página sem cortar
-                        true,                   // showPageBorder
-                        0                       // dpi (0 = padrão do driver)
+                        Scaling.SCALE_TO_FIT,
+                        false,
+                        0
                 );
 
-
+                // Atributos base
                 PrintRequestAttributeSet attrs = new HashPrintRequestAttributeSet();
-
                 if (copies < 1) copies = 1;
-                attrs.add(new Copies(copies));
+
+                // Definimos collate e fidelidade para aumentar a chance do driver honrar 'copies'
+                attrs.add(SheetCollate.COLLATED);
+                attrs.add(Fidelity.FIDELITY_TRUE);
 
                 if (target.isAttributeCategorySupported(Chromaticity.class)) {
                     attrs.add(color ? Chromaticity.COLOR : Chromaticity.MONOCHROME);
                 }
-
                 if (target.isAttributeCategorySupported(OrientationRequested.class)) {
                     attrs.add(landscape ? OrientationRequested.LANDSCAPE : OrientationRequested.PORTRAIT);
                 }
 
-                // (opcional) Qualidade e duplex – descomente se quiser
-                // if (target.isAttributeCategorySupported(PrintQuality.class)) {
-                //     attrs.add(PrintQuality.HIGH);
-                // }
-                // if (target.isAttributeCategorySupported(Sides.class)) {
-                //     attrs.add(Sides.ONE_SIDED); // ou Sides.DUPLEX
-                // }
-
                 DocFlavor flavor = DocFlavor.SERVICE_FORMATTED.PRINTABLE;
                 Doc doc = new SimpleDoc(printable, flavor, null);
-                DocPrintJob job = target.createPrintJob();
 
+                // Testa suporte a 'Copies' neste serviço + flavor + attrs
+                boolean copiesSupported = target.isAttributeCategorySupported(Copies.class);
+                if (copiesSupported) {
+                    // Alguns drivers dizem suportar a categoria, mas não o valor em conjunto com o flavor/attrs
+                    AttributeSet test = new HashPrintRequestAttributeSet(attrs);
+                    test.add(new Copies(copies));
+                    AttributeSet unsupported = target.getUnsupportedAttributes(flavor, test);
+                    copiesSupported = (unsupported == null || unsupported.get(Copies.class) == null);
+                }
+
+                DocPrintJob job = target.createPrintJob();
                 job.addPrintJobListener(new PrintJobAdapter() {
-                    @Override public void printJobCompleted(PrintJobEvent pje) {
-                        System.out.println("Job concluído: " + pdfPath);
-                    }
-                    @Override public void printJobFailed(PrintJobEvent pje) {
-                        System.err.println("Job falhou: " + pdfPath);
-                    }
+                    @Override public void printJobCompleted(PrintJobEvent pje) { System.out.println("Job concluído: " + pdfPath); }
+                    @Override public void printJobFailed(PrintJobEvent pje) { System.err.println("Job falhou: " + pdfPath); }
                 });
 
-                job.print(doc, attrs);
+                if (copiesSupported) {
+                    // Caminho “bonito”: driver vai multiplicar as cópias
+                    PrintRequestAttributeSet withCopies = new HashPrintRequestAttributeSet(attrs);
+                    withCopies.add(new Copies(copies));
+                    job.print(doc, withCopies);
+                } else {
+                    // Fallback confiável: spoola 'copies' vezes
+                    System.out.println("[printto] Driver não suporta Copies para este flavor; imprimindo em loop: " + copies + "x");
+                    // Evita mandar atributo não suportado
+                    AttributeSet unsupported = target.getUnsupportedAttributes(flavor, attrs);
+                    if (unsupported != null) {
+                        for (Attribute a : unsupported.toArray()) {
+                            System.out.println("[printto] Unsupported attr: " + a.getName() + " -> " + a.toString());
+                        }
+                    }
+                    for (int i = 1; i <= copies; i++) {
+                        System.out.println("[printto] Enviando cópia " + i + " de " + copies);
+                        job.print(doc, attrs);
+                    }
+                }
+
                 xlog = "SUCCESS";
             }
 
@@ -332,7 +349,7 @@ public class tools {
         }
 
         return xlog;
-      }
+    }
 
       public String BuscarDatas(String texto) {
       StringBuilder resultado = new StringBuilder();
